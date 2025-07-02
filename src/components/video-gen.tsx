@@ -19,10 +19,10 @@ type VideoGenProps = {
 export default function VideoGen({ generatedImageUrl }: VideoGenProps) {
   const [prompt, setPrompt] = useState('A photorealistic image with cinematic lighting');
   const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [userUploadedImage, setUserUploadedImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const activeImageDataUri = userUploadedImage || generatedImageUrl;
@@ -31,13 +31,9 @@ export default function VideoGen({ generatedImageUrl }: VideoGenProps) {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setUserUploadedImage(e.target?.result as string);
-        setResultUrl(null); // Clear previous result
-      };
+      reader.onload = (e) => setUserUploadedImage(e.target?.result as string);
       reader.readAsDataURL(file);
-    }
-  };
+    }  };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -83,8 +79,8 @@ export default function VideoGen({ generatedImageUrl }: VideoGenProps) {
             className="text-base"
           />
           <div>
-            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isPending} className="w-full">
-              <Upload className="mr-2 h-4 w-4"/>
+ <Input type="file" onChange={handleFileChange} className="hidden" accept="image/*" disabled={isPending} id="imageUpload"/>
+            <Button type="button" variant="outline" onClick={() => document.getElementById('imageUpload')?.click()} disabled={isPending} className="w-full">
               {activeImageDataUri ? 'Change Base Image' : 'Upload Base Image'}
             </Button>
             <Input
@@ -112,22 +108,14 @@ export default function VideoGen({ generatedImageUrl }: VideoGenProps) {
         <div className="mt-4 aspect-video w-full rounded-lg overflow-hidden border bg-secondary/50 flex items-center justify-center">
           {isPending ? (
             <Skeleton className="w-full h-full" />
-          ) : resultUrl ? (
+ ) : activeImageDataUri || resultUrl ? (
             <Image
-              src={resultUrl}
-              alt={prompt}
+              src={activeImageDataUri || resultUrl}
+              alt="Fashion effect or base image"
               width={512}
               height={512}
               className="object-cover w-full h-full"
-              data-ai-hint="fashion effect"
-            />
-          ) : activeImageDataUri ? (
-             <Image
-              src={activeImageDataUri}
-              alt="Base image for effects"
-              width={512}
-              height={512}
-              className="object-cover w-full h-full"
+              data-ai-hint="fashion effect or base image"
             />
           ) : (
             <div className="text-center text-muted-foreground p-4">
