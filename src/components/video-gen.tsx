@@ -1,14 +1,20 @@
 "use client";
 
-import { useState, useTransition, useRef } from 'react';
-import Image from 'next/image';
-import { Film, Sparkles, Upload } from 'lucide-react';
+import { useState, useTransition, useRef } from "react";
+import Image from "next/image";
+import { Film, Sparkles } from "lucide-react";
 
-import { generateFashionVideoAction } from '@/lib/actions';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { generateFashionVideoAction } from "@/lib/actions";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,7 +23,9 @@ type VideoGenProps = {
 };
 
 export default function VideoGen({ generatedImageUrl }: VideoGenProps) {
-  const [prompt, setPrompt] = useState('A photorealistic image with cinematic lighting');
+  const [prompt, setPrompt] = useState(
+    "A photorealistic image with cinematic lighting"
+  );
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [userUploadedImage, setUserUploadedImage] = useState<string | null>(null);
@@ -26,6 +34,7 @@ export default function VideoGen({ generatedImageUrl }: VideoGenProps) {
   const { toast } = useToast();
 
   const activeImageDataUri = userUploadedImage || generatedImageUrl;
+  const finalImage = activeImageDataUri || resultUrl;
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -33,7 +42,8 @@ export default function VideoGen({ generatedImageUrl }: VideoGenProps) {
       const reader = new FileReader();
       reader.onload = (e) => setUserUploadedImage(e.target?.result as string);
       reader.readAsDataURL(file);
-    }  };
+    }
+  };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -41,13 +51,21 @@ export default function VideoGen({ generatedImageUrl }: VideoGenProps) {
     setResultUrl(null);
 
     if (!activeImageDataUri) {
-        setError("Please upload an image or generate one first.");
-        toast({ title: "Image required", description: "Please upload an image or generate one first to apply effects.", variant: "destructive" });
-        return;
+      setError("Please upload an image or generate one first.");
+      toast({
+        title: "Image required",
+        description:
+          "Please upload an image or generate one first to apply effects.",
+        variant: "destructive",
+      });
+      return;
     }
 
     startTransition(async () => {
-      const result = await generateFashionVideoAction({ prompt, imageDataUri: activeImageDataUri });
+      const result = await generateFashionVideoAction({
+        prompt,
+        imageDataUri: activeImageDataUri,
+      });
       if (result.error) {
         setError(result.error);
         toast({ title: "Error", description: result.error, variant: "destructive" });
@@ -79,9 +97,22 @@ export default function VideoGen({ generatedImageUrl }: VideoGenProps) {
             className="text-base"
           />
           <div>
- <Input type="file" onChange={handleFileChange} className="hidden" accept="image/*" disabled={isPending} id="imageUpload"/>
-            <Button type="button" variant="outline" onClick={() => document.getElementById('imageUpload')?.click()} disabled={isPending} className="w-full">
-              {activeImageDataUri ? 'Change Base Image' : 'Upload Base Image'}
+            <Input
+              type="file"
+              onChange={handleFileChange}
+              className="hidden"
+              accept="image/*"
+              disabled={isPending}
+              id="imageUpload"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => document.getElementById("imageUpload")?.click()}
+              disabled={isPending}
+              className="w-full"
+            >
+              {activeImageDataUri ? "Change Base Image" : "Upload Base Image"}
             </Button>
             <Input
               type="file"
@@ -91,26 +122,28 @@ export default function VideoGen({ generatedImageUrl }: VideoGenProps) {
               accept="image/*"
               disabled={isPending}
             />
-            <p className="text-xs text-muted-foreground mt-1">Uses the image from ImageGen by default.</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Uses the image from ImageGen by default.
+            </p>
           </div>
           <Button type="submit" disabled={isPending || !activeImageDataUri} className="w-full">
             <Sparkles className="mr-2 h-4 w-4" />
-            {isPending ? 'Applying Effects...' : 'Generate Effects'}
+            {isPending ? "Applying Effects..." : "Generate Effects"}
           </Button>
         </form>
 
         {error && (
-            <Alert variant="destructive" className="mt-4">
-                <AlertDescription>{error}</AlertDescription>
-            </Alert>
+          <Alert variant="destructive" className="mt-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         <div className="mt-4 aspect-video w-full rounded-lg overflow-hidden border bg-secondary/50 flex items-center justify-center">
           {isPending ? (
             <Skeleton className="w-full h-full" />
- ) : activeImageDataUri || resultUrl ? (
+          ) : finalImage ? (
             <Image
-              src={activeImageDataUri || resultUrl}
+              src={finalImage}
               alt="Fashion effect or base image"
               width={512}
               height={512}
@@ -119,8 +152,8 @@ export default function VideoGen({ generatedImageUrl }: VideoGenProps) {
             />
           ) : (
             <div className="text-center text-muted-foreground p-4">
-                <Film className="mx-auto h-12 w-12 text-muted-foreground/50 mb-2"/>
-                Your stylized image will appear here.
+              <Film className="mx-auto h-12 w-12 text-muted-foreground/50 mb-2" />
+              Your stylized image will appear here.
             </div>
           )}
         </div>
